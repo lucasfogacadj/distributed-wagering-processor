@@ -1,0 +1,21 @@
+/** Tokens de injeção. Os controllers dependem de use cases e ports, nunca de implementações concretas. */
+export const TOKENS = {
+  ORM: Symbol("ORM"),
+  UOW: Symbol("UNIT_OF_WORK"),
+  CLOCK: Symbol("CLOCK"),
+  IDS: Symbol("ID_GENERATOR"),
+  LOGGER: Symbol("LOGGER"),
+  METRICS: Symbol("METRICS"),
+  LOG_CONTEXT: Symbol("LOG_CONTEXT"),
+  OBSERVABILITY: Symbol("OBSERVABILITY"),
+  METRICS_BINDING: Symbol("METRICS_BINDING"),
+  CREATE_WALLET: Symbol("CREATE_WALLET"),
+  PROCESS: Symbol("PROCESS_WAGER_TRANSACTION"),
+  REPROCESS: Symbol("REPROCESS_PENDING_REFERENCE"),
+  QUERIES: Symbol("WALLET_QUERIES"),
+  READINESS_CHECKS: Symbol("READINESS_CHECKS"),
+  PROVIDER_IDENTITY: Symbol("PROVIDER_IDENTITY"),
+  SQS_CLIENT: Symbol("SQS_CLIENT"),
+  QUEUE_URLS: Symbol("QUEUE_URLS"),
+  WORKERS: Symbol("BACKGROUND_WORKERS"),
+} as const;

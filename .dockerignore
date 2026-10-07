@@ -1,0 +1,8 @@
+node_modules
+test
+test.md
+*.md
+.git
+.claude
+Dockerfile
+docker-compose.yml

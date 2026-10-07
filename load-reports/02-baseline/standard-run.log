@@ -1,0 +1,61 @@
+$ bun run test/load/load-test.ts
+Teste de carga — perfil "standard" — cenários: spread-1x, spread-3x, hot-3x, mixed-3x, sqs-3x
+
+■ spread-1x — tráfego espalhado entre as wallets, 1 instância
+  ▸ spread-1x: malha fechada (64 clientes, 5s de aquecimento + 20s medidos)…
+    442 req/s · p99 320 ms · erros 0
+  ▸ spread-1x: malha aberta a 310 req/s (70% do máximo), 20s…
+    310 req/s · p99 49 ms · erros 0
+    ✅ wallet.balance == saldo reconstruído pelo ledger — 0 wallets divergentes
+    ✅ saldo == recomputação independente (só pela tabela de transações) — 0 wallets divergentes
+    ✅ um lançamento por transação aplicada (nenhum débito duplicado ou perdido) — 17891 aplicadas, 17891 lançamentos
+    ✅ nenhuma transação presa em estado não terminal — 0 presas
+    ✅ requisições confirmadas ao cliente ≤ gravadas no banco ≤ confirmadas + sem resposta definitiva (nada gravado em dobro) — 17391 confirmadas + 0 sem resposta definitiva (rede/timeout/5xx) → 17391 no banco
+
+■ spread-3x — tráfego espalhado entre as wallets, 3 instâncias
+  ▸ spread-3x: malha fechada (64 clientes, 5s de aquecimento + 20s medidos)…
+    729 req/s · p99 157 ms · erros 0
+  ▸ spread-3x: malha aberta a 510 req/s (70% do máximo), 20s…
+    510 req/s · p99 58 ms · erros 0
+    ✅ wallet.balance == saldo reconstruído pelo ledger — 0 wallets divergentes
+    ✅ saldo == recomputação independente (só pela tabela de transações) — 0 wallets divergentes
+    ✅ um lançamento por transação aplicada (nenhum débito duplicado ou perdido) — 28373 aplicadas, 28373 lançamentos
+    ✅ nenhuma transação presa em estado não terminal — 0 presas
+    ✅ requisições confirmadas ao cliente ≤ gravadas no banco ≤ confirmadas + sem resposta definitiva (nada gravado em dobro) — 27873 confirmadas + 0 sem resposta definitiva (rede/timeout/5xx) → 27873 no banco
+
+■ hot-3x — 100% do tráfego em UMA wallet, 3 instâncias
+  ▸ hot-3x: malha fechada (64 clientes, 5s de aquecimento + 20s medidos)…
+    126 req/s · p99 2943 ms · erros 0
+  ▸ hot-3x: malha aberta a 88 req/s (70% do máximo), 20s…
+    88 req/s · p99 41 ms · erros 0
+    ✅ wallet.balance == saldo reconstruído pelo ledger — 0 wallets divergentes
+    ✅ saldo == recomputação independente (só pela tabela de transações) — 0 wallets divergentes
+    ✅ um lançamento por transação aplicada (nenhum débito duplicado ou perdido) — 4849 aplicadas, 4849 lançamentos
+    ✅ nenhuma transação presa em estado não terminal — 0 presas
+    ✅ requisições confirmadas ao cliente ≤ gravadas no banco ≤ confirmadas + sem resposta definitiva (nada gravado em dobro) — 4848 confirmadas + 0 sem resposta definitiva (rede/timeout/5xx) → 4848 no banco
+
+■ mixed-3x — 90% espalhado + 10% em uma wallet quente, 3 instâncias
+  ▸ mixed-3x: malha fechada (64 clientes, 5s de aquecimento + 20s medidos)…
+    633 req/s · p99 1641 ms · erros 0
+  ▸ mixed-3x: malha aberta a 443 req/s (70% do máximo), 20s…
+    443 req/s · p99 52 ms · erros 0
+    ✅ wallet.balance == saldo reconstruído pelo ledger — 0 wallets divergentes
+    ✅ saldo == recomputação independente (só pela tabela de transações) — 0 wallets divergentes
+    ✅ um lançamento por transação aplicada (nenhum débito duplicado ou perdido) — 24877 aplicadas, 24877 lançamentos
+    ✅ nenhuma transação presa em estado não terminal — 0 presas
+    ✅ requisições confirmadas ao cliente ≤ gravadas no banco ≤ confirmadas + sem resposta definitiva (nada gravado em dobro) — 24376 confirmadas + 0 sem resposta definitiva (rede/timeout/5xx) → 24376 no banco
+
+■ sqs-3x — carga pela fila SQS FIFO (ponta a ponta), 3 instâncias
+  ▸ sqs-3x: 3000 mensagens pela fila FIFO (grupo = wallet)…
+    produtor 447 msg/s · consumo 120 msg/s · ponta a ponta p99 20126 ms
+    ✅ wallet.balance == saldo reconstruído pelo ledger — 0 wallets divergentes
+    ✅ saldo == recomputação independente (só pela tabela de transações) — 0 wallets divergentes
+    ✅ um lançamento por transação aplicada (nenhum débito duplicado ou perdido) — 3500 aplicadas, 3500 lançamentos
+    ✅ nenhuma transação presa em estado não terminal — 0 presas
+    ✅ requisições confirmadas ao cliente ≤ gravadas no banco ≤ confirmadas + sem resposta definitiva (nada gravado em dobro) — 3000 confirmadas + 0 sem resposta definitiva (rede/timeout/5xx) → 3000 no banco
+    ✅ todas as mensagens foram processadas — 3000/3000
+    ✅ nada foi para a DLQ — 0 mensagens
+
+Relatório: load-reports/load-2026-10-07T15-08-07.md (e .json)
+
+✅ Todas as invariantes de dinheiro se mantiveram sob carga.

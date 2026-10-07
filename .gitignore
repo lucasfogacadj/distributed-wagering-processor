@@ -1,0 +1,16 @@
+node_modules/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+# Logs das rodadas de carga analisadas (citados em load-reports/README.md) fazem parte da entrega.
+!/load-reports/**/*.log
+.DS_Store
+# Enunciado do desafio (está no repositório da empresa).
+test.md
+.claude/
+# Execuções novas do teste de carga caem na raiz de load-reports/; as analisadas ficam nas subpastas.
+/load-reports/*.md
+/load-reports/*.json
+!/load-reports/README.md

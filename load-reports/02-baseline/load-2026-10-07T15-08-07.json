@@ -1,0 +1,767 @@
+{
+  "environment": {
+    "data": "2026-10-07T15:08:07.461Z",
+    "sistema": "Windows_NT 10.0.26300 (x64)",
+    "cpu": "11th Gen Intel(R) Core(TM) i7-11800H @ 2.30GHz × 16 núcleos lógicos",
+    "memoria": "31.8 GB",
+    "bun": "1.4.2",
+    "docker": "29.8.1 (linux/amd64)",
+    "postgres": "PostgreSQL 16.15",
+    "postgresConfig": "fsync=on, max_connections=200, shared_buffers=163848kB, synchronous_commit=on, wal_level=replica",
+    "localstack": "3.8 (SQS)",
+    "app": "instâncias = processos bun · POOL_MAX=20 · LOCK_TIMEOUT_MS=15000 · outbox lote=50 lease=30s · SQS visibility=3s",
+    "cliente": "gerador de carga no MESMO host que o banco e as instâncias (compete por CPU)"
+  },
+  "config": {
+    "profile": "standard",
+    "warmupSec": 5,
+    "measureSec": 20,
+    "concurrency": 64,
+    "openFraction": 0.7,
+    "wallets": 500,
+    "sqsMessages": 3000
+  },
+  "results": [
+    {
+      "scenario": {
+        "name": "spread-1x",
+        "description": "tráfego espalhado entre as wallets, 1 instância",
+        "instances": 1,
+        "hotShare": 0,
+        "channel": "http"
+      },
+      "setupSec": 2.2950228999999998,
+      "phases": [
+        {
+          "mode": "closed-loop",
+          "durationSec": 20,
+          "concurrency": 64,
+          "attempted": 8843,
+          "ok": 8843,
+          "business": 0,
+          "errors": 0,
+          "errorRate": 0,
+          "byStatus": {
+            "200": 8843
+          },
+          "throughput": 442.15,
+          "latency": {
+            "count": 8843,
+            "min": 91.02970000000278,
+            "mean": 144.5063727354966,
+            "p50": 132.83250000000044,
+            "p90": 183.76029999999992,
+            "p95": 210.78459999999905,
+            "p99": 320.33560000000034,
+            "p999": 524.3395999999993,
+            "max": 546.7916999999998
+          },
+          "server": {
+            "transactions": {
+              "PROCESSED": 8967
+            },
+            "duplicates": 0,
+            "retries": {},
+            "dlq": 0,
+            "lockConflicts": {},
+            "lockWait": {
+              "count": 8956,
+              "meanMs": 4.587990609647167,
+              "p50Ms": 3.532700876814719,
+              "p95Ms": 10.644562334217465,
+              "p99Ms": 24.898143236074294
+            },
+            "serverLatency": {
+              "count": 8968,
+              "p50Ms": 176.4170388182755,
+              "p95Ms": 245.7334249398832,
+              "p99Ms": 399.8913043478257
+            },
+            "pgDeadlocks": 0,
+            "pgCommits": 11623,
+            "pgRollbacks": 0
+          },
+          "lockWaiters": {
+            "avg": 0.1375,
+            "max": 1
+          },
+          "outboxLagSec": {
+            "avg": 12.789722222222222,
+            "max": 20.694
+          },
+          "outboxBacklogAtEnd": 18959,
+          "outboxDrainSec": 34.3655491
+        },
+        {
+          "mode": "open-loop",
+          "durationSec": 20,
+          "targetRate": 310,
+          "attempted": 6200,
+          "ok": 6200,
+          "business": 0,
+          "errors": 0,
+          "errorRate": 0,
+          "byStatus": {
+            "200": 6200
+          },
+          "throughput": 310,
+          "latency": {
+            "count": 6200,
+            "min": 6.2967451612930745,
+            "mean": 16.945071306451165,
+            "p50": 15.054393548387452,
+            "p90": 26.68550000000687,
+            "p95": 31.69430000000284,
+            "p99": 49.24041290322202,
+            "p999": 67.96761935483664,
+            "max": 80.10510645160684
+          },
+          "generatorSkipped": 0,
+          "generatorMaxLagMs": 10.484383870963939,
+          "server": {
+            "transactions": {
+              "PROCESSED": 6200
+            },
+            "duplicates": 0,
+            "retries": {},
+            "dlq": 0,
+            "lockConflicts": {},
+            "lockWait": {
+              "count": 6200,
+              "meanMs": 1.2527023870968397,
+              "p50Ms": 0.8024851151954441,
+              "p95Ms": 4.712454212454213,
+              "p99Ms": 8.61111111111111
+            },
+            "serverLatency": {
+              "count": 6200,
+              "p50Ms": 14.855694227769112,
+              "p95Ms": 35.27173913043478,
+              "p99Ms": 48.75
+            },
+            "pgDeadlocks": 0,
+            "pgCommits": 14846,
+            "pgRollbacks": 0
+          },
+          "lockWaiters": {
+            "avg": 0.0125,
+            "max": 1
+          },
+          "outboxLagSec": {
+            "avg": 3.1561904761904764,
+            "max": 6.228
+          },
+          "outboxBacklogAtEnd": 3092,
+          "outboxDrainSec": 5.813656900000002
+        }
+      ],
+      "invariants": [
+        {
+          "name": "wallet.balance == saldo reconstruído pelo ledger",
+          "ok": true,
+          "detail": "0 wallets divergentes"
+        },
+        {
+          "name": "saldo == recomputação independente (só pela tabela de transações)",
+          "ok": true,
+          "detail": "0 wallets divergentes"
+        },
+        {
+          "name": "um lançamento por transação aplicada (nenhum débito duplicado ou perdido)",
+          "ok": true,
+          "detail": "17891 aplicadas, 17891 lançamentos"
+        },
+        {
+          "name": "nenhuma transação presa em estado não terminal",
+          "ok": true,
+          "detail": "0 presas"
+        },
+        {
+          "name": "requisições confirmadas ao cliente ≤ gravadas no banco ≤ confirmadas + sem resposta definitiva (nada gravado em dobro)",
+          "ok": true,
+          "detail": "17391 confirmadas + 0 sem resposta definitiva (rede/timeout/5xx) → 17391 no banco"
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "name": "spread-3x",
+        "description": "tráfego espalhado entre as wallets, 3 instâncias",
+        "instances": 3,
+        "hotShare": 0,
+        "channel": "http"
+      },
+      "setupSec": 1.932943299999999,
+      "phases": [
+        {
+          "mode": "closed-loop",
+          "durationSec": 20,
+          "concurrency": 64,
+          "attempted": 14578,
+          "ok": 14578,
+          "business": 0,
+          "errors": 0,
+          "errorRate": 0,
+          "byStatus": {
+            "200": 14578
+          },
+          "throughput": 728.9,
+          "latency": {
+            "count": 14578,
+            "min": 13.729900000005728,
+            "mean": 87.70650758677476,
+            "p50": 86.6582999999955,
+            "p90": 126.80340000000433,
+            "p95": 137.7731000000058,
+            "p99": 157.47500000000582,
+            "p999": 192.35269999998854,
+            "max": 237.78669999999693
+          },
+          "server": {
+            "transactions": {
+              "PROCESSED": 14684
+            },
+            "duplicates": 0,
+            "retries": {},
+            "dlq": 0,
+            "lockConflicts": {},
+            "lockWait": {
+              "count": 14652,
+              "meanMs": 8.48149997269998,
+              "p50Ms": 7.141213389121339,
+              "p95Ms": 24.092499999999998,
+              "p99Ms": 63.99999999999989
+            },
+            "serverLatency": {
+              "count": 14686,
+              "p50Ms": 79.46398471738398,
+              "p95Ms": 220.13421908893704,
+              "p99Ms": 244.02684381778738
+            },
+            "pgDeadlocks": 0,
+            "pgCommits": 20192,
+            "pgRollbacks": 0
+          },
+          "lockWaiters": {
+            "avg": 1.325,
+            "max": 4
+          },
+          "outboxLagSec": {
+            "avg": 12.3562,
+            "max": 20.056
+          },
+          "outboxBacklogAtEnd": 28249,
+          "outboxDrainSec": 47.46075679999999
+        },
+        {
+          "mode": "open-loop",
+          "durationSec": 20,
+          "targetRate": 510,
+          "attempted": 10200,
+          "ok": 10200,
+          "business": 0,
+          "errors": 0,
+          "errorRate": 0,
+          "byStatus": {
+            "200": 10200
+          },
+          "throughput": 510,
+          "latency": {
+            "count": 10200,
+            "min": 7.060966666642344,
+            "mean": 17.63286066666038,
+            "p50": 14.076029411779018,
+            "p90": 29.900468627427472,
+            "p95": 37.0554235293821,
+            "p99": 58.41045882352046,
+            "p999": 91.88317647058284,
+            "max": 106.21654117645812
+          },
+          "generatorSkipped": 0,
+          "generatorMaxLagMs": 6.577256862743525,
+          "server": {
+            "transactions": {
+              "PROCESSED": 10200
+            },
+            "duplicates": 0,
+            "retries": {},
+            "dlq": 0,
+            "lockConflicts": {},
+            "lockWait": {
+              "count": 10200,
+              "meanMs": 1.4854374803921866,
+              "p50Ms": 1.3864482501861504,
+              "p95Ms": 4.804169769173493,
+              "p99Ms": 9.617834394904458
+            },
+            "serverLatency": {
+              "count": 10200,
+              "p50Ms": 18.17628816793893,
+              "p95Ms": 41.680997420464315,
+              "p99Ms": 58.53658536585366
+            },
+            "pgDeadlocks": 0,
+            "pgCommits": 17275,
+            "pgRollbacks": 0
+          },
+          "lockWaiters": {
+            "avg": 0,
+            "max": 0
+          },
+          "outboxLagSec": {
+            "avg": 6.8340476190476185,
+            "max": 13.249
+          },
+          "outboxBacklogAtEnd": 12361,
+          "outboxDrainSec": 21.10087340000001
+        }
+      ],
+      "invariants": [
+        {
+          "name": "wallet.balance == saldo reconstruído pelo ledger",
+          "ok": true,
+          "detail": "0 wallets divergentes"
+        },
+        {
+          "name": "saldo == recomputação independente (só pela tabela de transações)",
+          "ok": true,
+          "detail": "0 wallets divergentes"
+        },
+        {
+          "name": "um lançamento por transação aplicada (nenhum débito duplicado ou perdido)",
+          "ok": true,
+          "detail": "28373 aplicadas, 28373 lançamentos"
+        },
+        {
+          "name": "nenhuma transação presa em estado não terminal",
+          "ok": true,
+          "detail": "0 presas"
+        },
+        {
+          "name": "requisições confirmadas ao cliente ≤ gravadas no banco ≤ confirmadas + sem resposta definitiva (nada gravado em dobro)",
+          "ok": true,
+          "detail": "27873 confirmadas + 0 sem resposta definitiva (rede/timeout/5xx) → 27873 no banco"
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "name": "hot-3x",
+        "description": "100% do tráfego em UMA wallet, 3 instâncias",
+        "instances": 3,
+        "hotShare": 1,
+        "channel": "http"
+      },
+      "setupSec": 1.0011641999999992,
+      "phases": [
+        {
+          "mode": "closed-loop",
+          "durationSec": 20,
+          "concurrency": 64,
+          "attempted": 2515,
+          "ok": 2515,
+          "business": 0,
+          "errors": 0,
+          "errorRate": 0,
+          "byStatus": {
+            "200": 2515
+          },
+          "throughput": 125.75,
+          "latency": {
+            "count": 2515,
+            "min": 19.949299999978393,
+            "mean": 499.8397566202778,
+            "p50": 233.15109999998822,
+            "p90": 1359.048999999999,
+            "p95": 1911.1638000000094,
+            "p99": 2943.0308000000077,
+            "p999": 4376.220699999976,
+            "max": 5614.161499999987
+          },
+          "server": {
+            "transactions": {
+              "PROCESSED": 2594
+            },
+            "duplicates": 0,
+            "retries": {},
+            "dlq": 0,
+            "lockConflicts": {},
+            "lockWait": {
+              "count": 2594,
+              "meanMs": 449.1122084811102,
+              "p50Ms": 156.93430656934308,
+              "p95Ms": 2158.6053412462898,
+              "p99Ms": 3800.961538461536
+            },
+            "serverLatency": {
+              "count": 2595,
+              "p50Ms": 249.5879120879121,
+              "p95Ms": 2206.5649867374004,
+              "p99Ms": 3891.203703703712
+            },
+            "pgDeadlocks": 0,
+            "pgCommits": 3346,
+            "pgRollbacks": 0
+          },
+          "lockWaiters": {
+            "avg": 52.91463414634146,
+            "max": 59
+          },
+          "outboxLagSec": {
+            "avg": 13.819550000000001,
+            "max": 23.598
+          },
+          "outboxBacklogAtEnd": 5799,
+          "outboxDrainSec": null
+        },
+        {
+          "mode": "open-loop",
+          "durationSec": 20,
+          "targetRate": 88,
+          "attempted": 1760,
+          "ok": 1760,
+          "business": 0,
+          "errors": 0,
+          "errorRate": 0,
+          "byStatus": {
+            "200": 1760
+          },
+          "throughput": 88,
+          "latency": {
+            "count": 1760,
+            "min": 7.865681818162557,
+            "mean": 12.348762272724839,
+            "p50": 11.409881818166468,
+            "p90": 14.184218181821052,
+            "p95": 16.505181818152778,
+            "p99": 41.01698181818938,
+            "p999": 57.629472727305256,
+            "max": 83.7238181818393
+          },
+          "generatorSkipped": 0,
+          "generatorMaxLagMs": 24.7627909090952,
+          "server": {
+            "transactions": {
+              "PROCESSED": 1760
+            },
+            "duplicates": 0,
+            "retries": {},
+            "dlq": 0,
+            "lockConflicts": {},
+            "lockWait": {
+              "count": 1760,
+              "meanMs": 1.7852757386366007,
+              "p50Ms": 1.6875631951466128,
+              "p95Ms": 4.8907987866531855,
+              "p99Ms": 24.727272727272773
+            },
+            "serverLatency": {
+              "count": 1760,
+              "p50Ms": 12.50996015936255,
+              "p95Ms": 24.342629482071715,
+              "p99Ms": 41.92307692307698
+            },
+            "pgDeadlocks": 0,
+            "pgCommits": 1923,
+            "pgRollbacks": 0
+          },
+          "lockWaiters": {
+            "avg": 0.0625,
+            "max": 2
+          },
+          "outboxLagSec": {
+            "avg": 149.21423809523807,
+            "max": 159.197
+          },
+          "outboxBacklogAtEnd": 8077,
+          "outboxDrainSec": null
+        }
+      ],
+      "invariants": [
+        {
+          "name": "wallet.balance == saldo reconstruído pelo ledger",
+          "ok": true,
+          "detail": "0 wallets divergentes"
+        },
+        {
+          "name": "saldo == recomputação independente (só pela tabela de transações)",
+          "ok": true,
+          "detail": "0 wallets divergentes"
+        },
+        {
+          "name": "um lançamento por transação aplicada (nenhum débito duplicado ou perdido)",
+          "ok": true,
+          "detail": "4849 aplicadas, 4849 lançamentos"
+        },
+        {
+          "name": "nenhuma transação presa em estado não terminal",
+          "ok": true,
+          "detail": "0 presas"
+        },
+        {
+          "name": "requisições confirmadas ao cliente ≤ gravadas no banco ≤ confirmadas + sem resposta definitiva (nada gravado em dobro)",
+          "ok": true,
+          "detail": "4848 confirmadas + 0 sem resposta definitiva (rede/timeout/5xx) → 4848 no banco"
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "name": "mixed-3x",
+        "description": "90% espalhado + 10% em uma wallet quente, 3 instâncias",
+        "instances": 3,
+        "hotShare": 0.1,
+        "channel": "http"
+      },
+      "setupSec": 2.0346625999999817,
+      "phases": [
+        {
+          "mode": "closed-loop",
+          "durationSec": 20,
+          "concurrency": 64,
+          "attempted": 12665,
+          "ok": 12665,
+          "business": 0,
+          "errors": 0,
+          "errorRate": 0,
+          "byStatus": {
+            "200": 12665
+          },
+          "throughput": 633.25,
+          "latency": {
+            "count": 12665,
+            "min": 10.681600000010803,
+            "mean": 98.59428061587033,
+            "p50": 32.82979999994859,
+            "p90": 108.85910000000149,
+            "p95": 327.9065999999875,
+            "p99": 1641.284800000023,
+            "p999": 3505.8889999999665,
+            "max": 10561.54839999997
+          },
+          "server": {
+            "transactions": {
+              "PROCESSED": 12746
+            },
+            "duplicates": 0,
+            "retries": {},
+            "dlq": 0,
+            "lockConflicts": {},
+            "lockWait": {
+              "count": 12735,
+              "meanMs": 65.73491011385944,
+              "p50Ms": 3.165174704013861,
+              "p95Ms": 330.21907216494844,
+              "p99Ms": 2034.6739130434762
+            },
+            "serverLatency": {
+              "count": 12751,
+              "p50Ms": 32.10619320094245,
+              "p95Ms": 370.2792553191475,
+              "p99Ms": 2069.0851063829773
+            },
+            "pgDeadlocks": 0,
+            "pgCommits": 19730,
+            "pgRollbacks": 0
+          },
+          "lockWaiters": {
+            "avg": 38.41975308641975,
+            "max": 48
+          },
+          "outboxLagSec": {
+            "avg": 13.969299999999999,
+            "max": 23.433
+          },
+          "outboxBacklogAtEnd": 23599,
+          "outboxDrainSec": 70.0609939
+        },
+        {
+          "mode": "open-loop",
+          "durationSec": 20,
+          "targetRate": 443,
+          "attempted": 8860,
+          "ok": 8860,
+          "business": 0,
+          "errors": 0,
+          "errorRate": 0,
+          "byStatus": {
+            "200": 8860
+          },
+          "throughput": 443,
+          "latency": {
+            "count": 8860,
+            "min": 5.0560776522615924,
+            "mean": 15.756206365630138,
+            "p50": 12.897727765142918,
+            "p90": 25.765999999945052,
+            "p95": 32.050004740362056,
+            "p99": 51.69278148980811,
+            "p999": 120.54562528210226,
+            "max": 253.277278329595
+          },
+          "generatorSkipped": 0,
+          "generatorMaxLagMs": 7.673055981867947,
+          "server": {
+            "transactions": {
+              "PROCESSED": 8860
+            },
+            "duplicates": 0,
+            "retries": {},
+            "dlq": 0,
+            "lockConflicts": {},
+            "lockWait": {
+              "count": 8860,
+              "meanMs": 1.898912336343117,
+              "p50Ms": 1.0897779946328374,
+              "p95Ms": 4.980483044645035,
+              "p99Ms": 21.61111111111108
+            },
+            "serverLatency": {
+              "count": 8860,
+              "p50Ms": 16.064088040135942,
+              "p95Ms": 36.21700879765396,
+              "p99Ms": 49.208211143695
+            },
+            "pgDeadlocks": 0,
+            "pgCommits": 17148,
+            "pgRollbacks": 0
+          },
+          "lockWaiters": {
+            "avg": 0.25,
+            "max": 6
+          },
+          "outboxLagSec": {
+            "avg": 9.580285714285715,
+            "max": 19.282
+          },
+          "outboxBacklogAtEnd": 9093,
+          "outboxDrainSec": 32.358870200000005
+        }
+      ],
+      "invariants": [
+        {
+          "name": "wallet.balance == saldo reconstruído pelo ledger",
+          "ok": true,
+          "detail": "0 wallets divergentes"
+        },
+        {
+          "name": "saldo == recomputação independente (só pela tabela de transações)",
+          "ok": true,
+          "detail": "0 wallets divergentes"
+        },
+        {
+          "name": "um lançamento por transação aplicada (nenhum débito duplicado ou perdido)",
+          "ok": true,
+          "detail": "24877 aplicadas, 24877 lançamentos"
+        },
+        {
+          "name": "nenhuma transação presa em estado não terminal",
+          "ok": true,
+          "detail": "0 presas"
+        },
+        {
+          "name": "requisições confirmadas ao cliente ≤ gravadas no banco ≤ confirmadas + sem resposta definitiva (nada gravado em dobro)",
+          "ok": true,
+          "detail": "24376 confirmadas + 0 sem resposta definitiva (rede/timeout/5xx) → 24376 no banco"
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "name": "sqs-3x",
+        "description": "carga pela fila SQS FIFO (ponta a ponta), 3 instâncias",
+        "instances": 3,
+        "hotShare": 0,
+        "channel": "sqs"
+      },
+      "setupSec": 1.9203495000000113,
+      "phases": [],
+      "sqs": {
+        "messages": 3000,
+        "producerSec": 6.717166800000006,
+        "producerRate": 446.61686829036273,
+        "totalSec": 24.920598,
+        "consumptionRate": 120.38234395498857,
+        "endToEnd": {
+          "count": 3000,
+          "min": 294,
+          "mean": 10950.617,
+          "p50": 11248,
+          "p90": 17851,
+          "p95": 18976,
+          "p99": 20126,
+          "p999": 20927,
+          "max": 20987
+        },
+        "processed": 3000,
+        "server": {
+          "transactions": {
+            "PROCESSED": 3000
+          },
+          "duplicates": 0,
+          "retries": {},
+          "dlq": 0,
+          "lockConflicts": {},
+          "lockWait": {
+            "count": 3000,
+            "meanMs": 1.2731624999999995,
+            "p50Ms": 1.7672747374239912,
+            "p95Ms": 4.752349364289662,
+            "p99Ms": 7.105263157894737
+          },
+          "serverLatency": {
+            "count": 3000,
+            "p50Ms": 17.180382072005877,
+            "p95Ms": 24.619764878765615,
+            "p99Ms": 45.9016393442623
+          },
+          "pgDeadlocks": 0,
+          "pgCommits": 10785,
+          "pgRollbacks": 0
+        },
+        "outboxLagSec": {
+          "avg": 0.4588400000000001,
+          "max": 1.406
+        },
+        "outboxDrainSec": 0.0035083000001031907
+      },
+      "invariants": [
+        {
+          "name": "wallet.balance == saldo reconstruído pelo ledger",
+          "ok": true,
+          "detail": "0 wallets divergentes"
+        },
+        {
+          "name": "saldo == recomputação independente (só pela tabela de transações)",
+          "ok": true,
+          "detail": "0 wallets divergentes"
+        },
+        {
+          "name": "um lançamento por transação aplicada (nenhum débito duplicado ou perdido)",
+          "ok": true,
+          "detail": "3500 aplicadas, 3500 lançamentos"
+        },
+        {
+          "name": "nenhuma transação presa em estado não terminal",
+          "ok": true,
+          "detail": "0 presas"
+        },
+        {
+          "name": "requisições confirmadas ao cliente ≤ gravadas no banco ≤ confirmadas + sem resposta definitiva (nada gravado em dobro)",
+          "ok": true,
+          "detail": "3000 confirmadas + 0 sem resposta definitiva (rede/timeout/5xx) → 3000 no banco"
+        },
+        {
+          "name": "todas as mensagens foram processadas",
+          "ok": true,
+          "detail": "3000/3000"
+        },
+        {
+          "name": "nada foi para a DLQ",
+          "ok": true,
+          "detail": "0 mensagens"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+$ bun run test/load/load-test.ts
+Teste de carga — perfil "standard" — cenários: spread-3x, mixed-3x
+
+■ spread-3x — tráfego espalhado entre as wallets, 3 instâncias
+  ▸ spread-3x: malha fechada (64 clientes, 5s de aquecimento + 20s medidos)…
+    730 req/s · p99 163 ms · erros 0
+  ▸ spread-3x: malha aberta a 511 req/s (70% do máximo), 20s…
+    511 req/s · p99 28 ms · erros 0
+    ✅ wallet.balance == saldo reconstruído pelo ledger — 0 wallets divergentes
+    ✅ saldo == recomputação independente (só pela tabela de transações) — 0 wallets divergentes
+    ✅ um lançamento por transação aplicada (nenhum débito duplicado ou perdido) — 28397 aplicadas, 28397 lançamentos
+    ✅ nenhuma transação presa em estado não terminal — 0 presas
+    ✅ requisições confirmadas ao cliente ≤ gravadas no banco ≤ confirmadas + sem resposta definitiva (nada gravado em dobro) — 27897 confirmadas + 0 sem resposta definitiva (rede/timeout/5xx) → 27897 no banco
+
+■ mixed-3x — 90% espalhado + 10% em uma wallet quente, 3 instâncias
+  ▸ mixed-3x: malha fechada (64 clientes, 5s de aquecimento + 20s medidos)…
+    655 req/s · p99 1558 ms · erros 0
+  ▸ mixed-3x: malha aberta a 458 req/s (70% do máximo), 20s…
+    458 req/s · p99 32 ms · erros 0
+    ✅ wallet.balance == saldo reconstruído pelo ledger — 0 wallets divergentes
+    ✅ saldo == recomputação independente (só pela tabela de transações) — 0 wallets divergentes
+    ✅ um lançamento por transação aplicada (nenhum débito duplicado ou perdido) — 25549 aplicadas, 25549 lançamentos
+    ✅ nenhuma transação presa em estado não terminal — 0 presas
+    ✅ requisições confirmadas ao cliente ≤ gravadas no banco ≤ confirmadas + sem resposta definitiva (nada gravado em dobro) — 25048 confirmadas + 0 sem resposta definitiva (rede/timeout/5xx) → 25048 no banco
+
+Relatório: load-reports/load-2026-10-07T15-44-32.md (e .json)
+
+✅ Todas as invariantes de dinheiro se mantiveram sob carga.

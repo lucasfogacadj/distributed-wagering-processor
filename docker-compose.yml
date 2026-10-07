@@ -1,0 +1,90 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: wager
+      POSTGRES_PASSWORD: wager
+      POSTGRES_DB: wager
+    ports:
+      - "5433:5432"
+    # fsync/synchronous_commit permanecem ligados: o desafio trata durabilidade como requisito.
+    command: ["postgres", "-c", "max_connections=200"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wager -d wager"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Versão fixada: imagens recentes do LocalStack exigem token de conta.
+  localstack:
+    image: localstack/localstack:3.8
+    environment:
+      SERVICES: sqs
+      AWS_DEFAULT_REGION: us-east-1
+    ports:
+      - "4566:4566"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:4566/_localstack/health | grep -q '\"sqs\": \"\\(available\\|running\\)\"'"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
+  # Identity Provider externo (OIDC). Cada provedor de jogos é um client `client_credentials` com a claim provider_id;
+  # o backoffice tem o papel wagering-operator. Realm, clients e secrets de DESENVOLVIMENTO em keycloak/realm-wagering.json.
+  # KC_HOSTNAME fixa o `iss` dos tokens em http://localhost:8180 (o mesmo visto pelo host e pelos containers).
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: http://localhost:8180
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HTTP_PORT: "8080"
+      KC_HEALTH_ENABLED: "true"
+    volumes:
+      - ./keycloak/realm-wagering.json:/opt/keycloak/data/import/realm-wagering.json:ro
+    ports:
+      - "8180:8080"
+    # A imagem não tem curl: a checagem fala HTTP direto com a porta de gerenciamento (9000) pelo /dev/tcp do bash.
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && grep -q UP <&3"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 20s
+
+  # A aplicação. Sem container_name e com faixa de portas, para escalar:
+  #   docker compose up --build --scale app=3
+  # Cada réplica é um processo independente com seu próprio pool, consumidor, relay e worker de pendências.
+  app:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://wager:wager@postgres:5432/wager
+      SQS_ENDPOINT: http://localstack:4566
+      AWS_REGION: us-east-1
+      PORT: "3000"
+      # Migrations no boot são seguras com várias réplicas subindo juntas (advisory lock).
+      RUN_MIGRATIONS: "true"
+      SHUTDOWN_DRAIN_MS: "20000"
+      # Autenticação OIDC: o issuer é o que vai no token; o JWKS é buscado pela rede interna do compose.
+      AUTH_MODE: oidc
+      OIDC_ISSUER: http://localhost:8180/realms/wagering
+      OIDC_JWKS_URL: http://keycloak:8080/realms/wagering/protocol/openid-connect/certs
+      OIDC_AUDIENCE: wagering-api
+    ports:
+      - "3000-3010:3000"
+    # Tempo para o SIGTERM drenar o que está em andamento antes do SIGKILL (> SHUTDOWN_DRAIN_MS).
+    stop_grace_period: 30s
+
+volumes:
+  pgdata:

@@ -1,0 +1,123 @@
+{
+  "environment": {
+    "data": "2026-10-07T15:09:55.655Z",
+    "sistema": "Windows_NT 10.0.26300 (x64)",
+    "cpu": "11th Gen Intel(R) Core(TM) i7-11800H @ 2.30GHz × 16 núcleos lógicos",
+    "memoria": "31.8 GB",
+    "bun": "1.4.2",
+    "docker": "29.8.1 (linux/amd64)",
+    "postgres": "PostgreSQL 16.15",
+    "postgresConfig": "fsync=on, max_connections=200, shared_buffers=163848kB, synchronous_commit=on, wal_level=replica",
+    "localstack": "3.8 (SQS)",
+    "app": "instâncias = processos bun · POOL_MAX=20 · LOCK_TIMEOUT_MS=15000 · outbox lote=50 lease=30s · SQS visibility=3s",
+    "cliente": "gerador de carga no MESMO host que o banco e as instâncias (compete por CPU)"
+  },
+  "config": {
+    "profile": "standard",
+    "warmupSec": 5,
+    "measureSec": 20,
+    "concurrency": 64,
+    "openFraction": 0.7,
+    "wallets": 500,
+    "sqsMessages": 3000
+  },
+  "results": [
+    {
+      "scenario": {
+        "name": "sqs-3x",
+        "description": "carga pela fila SQS FIFO (ponta a ponta), 3 instâncias",
+        "instances": 3,
+        "hotShare": 0,
+        "channel": "sqs"
+      },
+      "setupSec": 2.0297775000000002,
+      "phases": [],
+      "sqs": {
+        "messages": 3000,
+        "producerSec": 6.1803706,
+        "producerRate": 485.40778444580656,
+        "totalSec": 24.3477673,
+        "consumptionRate": 123.21458321149635,
+        "endToEnd": {
+          "count": 3000,
+          "min": 245,
+          "mean": 11036.109,
+          "p50": 11279,
+          "p90": 18112,
+          "p95": 19068,
+          "p99": 20336,
+          "p999": 21057,
+          "max": 21938
+        },
+        "processed": 3000,
+        "server": {
+          "transactions": {
+            "PROCESSED": 3000
+          },
+          "duplicates": 0,
+          "retries": {},
+          "dlq": 0,
+          "lockConflicts": {},
+          "lockWait": {
+            "count": 3000,
+            "meanMs": 1.2500157666667082,
+            "p50Ms": 1.8444681988241582,
+            "p95Ms": 4.730625334045965,
+            "p99Ms": 4.98717263495457
+          },
+          "serverLatency": {
+            "count": 3000,
+            "p50Ms": 17.12773722627737,
+            "p95Ms": 24.51824817518248,
+            "p99Ms": 40.38461538461539
+          },
+          "pgDeadlocks": 0,
+          "pgCommits": 10433,
+          "pgRollbacks": 0
+        },
+        "outboxLagSec": {
+          "avg": 0.38667999999999997,
+          "max": 0.964
+        },
+        "outboxDrainSec": 0.0017780999999995402
+      },
+      "invariants": [
+        {
+          "name": "wallet.balance == saldo reconstruído pelo ledger",
+          "ok": true,
+          "detail": "0 wallets divergentes"
+        },
+        {
+          "name": "saldo == recomputação independente (só pela tabela de transações)",
+          "ok": true,
+          "detail": "0 wallets divergentes"
+        },
+        {
+          "name": "um lançamento por transação aplicada (nenhum débito duplicado ou perdido)",
+          "ok": true,
+          "detail": "3500 aplicadas, 3500 lançamentos"
+        },
+        {
+          "name": "nenhuma transação presa em estado não terminal",
+          "ok": true,
+          "detail": "0 presas"
+        },
+        {
+          "name": "requisições confirmadas ao cliente ≤ gravadas no banco ≤ confirmadas + sem resposta definitiva (nada gravado em dobro)",
+          "ok": true,
+          "detail": "3000 confirmadas + 0 sem resposta definitiva (rede/timeout/5xx) → 3000 no banco"
+        },
+        {
+          "name": "todas as mensagens foram processadas",
+          "ok": true,
+          "detail": "3000/3000"
+        },
+        {
+          "name": "nada foi para a DLQ",
+          "ok": true,
+          "detail": "0 mensagens"
+        }
+      ]
+    }
+  ]
+}

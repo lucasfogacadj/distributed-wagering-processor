@@ -1,0 +1,7 @@
+[test]
+# Sem `coverageThreshold` de propósito. No Bun 1.4 o limite é avaliado POR ARQUIVO e, no formato que de fato é
+# aplicado (número único), vale para linhas E funções. O relatório conta como função não chamada o construtor
+# implícito de classes que só têm inicializadores de campo (todas as subclasses de erro de domínio), então
+# arquivos como `src/domain/errors.ts` aparecem com 0-50% de funções mesmo instanciados em vários testes.
+# Um piso aqui exigiria testes artificiais para satisfazer o relatório. A cobertura é medida e documentada no
+# README (`bun run test:coverage`): linhas ~99,9%, funções ~93% (unit + integração).
